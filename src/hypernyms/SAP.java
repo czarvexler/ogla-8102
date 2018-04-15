@@ -14,40 +14,12 @@ public class SAP {
 
     // length of shortest ancestral path between v and w; -1 if no such path
     public int length(int v, int w) {
-        final BreadthFirstDirectedPaths breadthFirstDirectedPathsV = new BreadthFirstDirectedPaths(this.digraph, v);
-        final BreadthFirstDirectedPaths breadthFirstDirectedPathsW = new BreadthFirstDirectedPaths(this.digraph, w);
-
-        int length = -1;
-        for (int i = 0; i < digraph.V(); i++) {
-            if (breadthFirstDirectedPathsV.hasPathTo(i) && breadthFirstDirectedPathsW.hasPathTo(i)) {
-                final int l = breadthFirstDirectedPathsV.distTo(i) + breadthFirstDirectedPathsW.distTo(i);
-                if (length == -1 || l < length) {
-                    length = l;
-                }
-            }
-        }
-
-        return length;
+        return length(Collections.singleton(v), Collections.singleton(w));
     }
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if no such path
     public int ancestor(int v, int w) {
-        final BreadthFirstDirectedPaths breadthFirstDirectedPathsV = new BreadthFirstDirectedPaths(this.digraph, v);
-        final BreadthFirstDirectedPaths breadthFirstDirectedPathsW = new BreadthFirstDirectedPaths(this.digraph, w);
-
-        int length = -1;
-        int ancestor = -1;
-        for (int i = 0; i < digraph.V(); i++) {
-            if (breadthFirstDirectedPathsV.hasPathTo(i) && breadthFirstDirectedPathsW.hasPathTo(i)) {
-                final int l = breadthFirstDirectedPathsV.distTo(i) + breadthFirstDirectedPathsW.distTo(i);
-                if (length == -1 || l < length) {
-                    length = l;
-                    ancestor = i;
-                }
-            }
-        }
-
-        return ancestor;
+        return ancestor(Collections.singleton(v), Collections.singleton(w));
     }
 
     // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path

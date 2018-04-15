@@ -5,10 +5,12 @@ import edu.princeton.cs.algs4.In;
 import java.util.*;
 import java.util.stream.Collectors;
 
+//todo run checkstyles and findbugs
 public class WordNet {
 
     private final Map<Integer, Synset> synsetMap;
     private final Digraph digraph;
+    private final SAP sap;
 
     // constructor takes the name of the two input files
     public WordNet(final String synsets, final String hypernyms) {
@@ -23,6 +25,7 @@ public class WordNet {
 
             parseSynsets(synsetLines);
             parseHypernymsFile(hypernyms);
+            this.sap = new SAP(this.digraph);
         }
         catch (final Exception e) {
             throw new IllegalArgumentException(e);
@@ -83,11 +86,13 @@ public class WordNet {
 
     // distance between nounA and nounB (defined below)
     public int distance(final String nounA, final String nounB) {
-        final Set<Synset> synsetA = findSynsetFromString(nounA);
-        final Set<Synset> synsetB = findSynsetFromString(nounB);
-        final BreadthFirstDirectedPaths breadthFirstDirectedPaths = new BreadthFirstDirectedPaths(this.digraph, synsetA.stream().map(synset -> synset.vertexId).collect(Collectors.toSet()));
-        return synsetB.stream().map(synset -> breadthFirstDirectedPaths.distTo(synset.vertexId)).min(Integer::compareTo)
-                .orElseThrow(() -> new IllegalStateException("No Path exsists between a synset containing " + nounA + " and a synset containing " + nounB));
+        final Set<Synset> synsetsA = findSynsetFromString(nounA);
+        final Set<Integer> verticiesA = synsetsA.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
+
+        final Set<Synset> synsetsB = findSynsetFromString(nounB);
+        final Set<Integer> verticiesB = synsetsB.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
+
+        return this.sap.length(verticiesA, verticiesB);
     }
 
     private Set<Synset> findSynsetFromString(final String noun) {
@@ -104,11 +109,18 @@ public class WordNet {
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
     public String sap(final String nounA, final String nounB) {
+        final Set<Synset> synsetsA = findSynsetFromString(nounA);
+        final Set<Integer> verticiesA = synsetsA.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
 
+        final Set<Synset> synsetsB = findSynsetFromString(nounB);
+        final Set<Integer> verticiesB = synsetsB.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
+
+        return vertexIdtoSynset(this.sap.ancestor(verticiesA, verticiesB)).synonyms.stream().collect(Collectors.joining(" "));
     }
 
     private Synset vertexIdtoSynset(final int vertexId) {
-        return this.synsetMap.values().stream().filter(synset -> synset.vertexId == vertexId).findAny().orElseThrow(() -> new IllegalArgumentException());
+        return this.synsetMap.values().stream().filter(synset -> synset.vertexId == vertexId).findAny().orElseThrow(
+                () -> new IllegalArgumentException("Could not find Synset matching specified vertex id " + vertexId));
     }
 
     // do unit testing of this class
