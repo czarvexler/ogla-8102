@@ -1,11 +1,20 @@
-import edu.princeton.cs.algs4.BreadthFirstDirectedPaths;
+package hypernyms;
+
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.In;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-//todo run checkstyles and findbugs
+/**
+ * @author aleksander.veksler
+ * @since Apr-2018
+ */
 public class WordNet {
 
     private final Map<Integer, Synset> synsetMap;
@@ -26,14 +35,12 @@ public class WordNet {
             parseSynsets(synsetLines);
             parseHypernymsFile(hypernyms);
             this.sap = new SAP(this.digraph);
-        }
-        catch (final Exception e) {
+        } catch (final Exception e) {
             throw new IllegalArgumentException(e);
         }
-
     }
 
-    private void parseSynsets(String[] synsetLines) {
+    private void parseSynsets(final String[] synsetLines) {
         int vertexIdAllocator = 0;
         for (final String synsetLine : synsetLines) {
             final String[] parsedLine = synsetLine.split(",");
@@ -45,14 +52,14 @@ public class WordNet {
         }
     }
 
-    private void parseHypernymsFile(String hypernyms) {
+    private void parseHypernymsFile(final String hypernyms) {
         final In hypernymsIn = new In(hypernyms);
         final String[] hypernymLines = hypernymsIn.readAllLines();
         Arrays.stream(hypernymLines).forEach(hypernymline -> {
             final String[] parsedLine = hypernymline.split(",");
             final int sourceSynsetId = Integer.parseInt(parsedLine[0]);
             final Synset sourceSynset = validateAndGetSynsetFromId(sourceSynsetId);
-            for (int i =1; i < parsedLine.length; i++) {
+            for (int i = 1; i < parsedLine.length; i++) {
                 final int targetSynsetId = Integer.parseInt(parsedLine[i]);
                 this.digraph.addEdge(sourceSynset.vertexId, targetSynsetId);
             }
@@ -99,7 +106,8 @@ public class WordNet {
         if (noun == null) {
             throw new IllegalArgumentException("Null word not allowed");
         }
-        final Set<Synset> res = this.synsetMap.values().stream().filter(synset -> synset.synonyms.contains(noun)).collect(Collectors.toSet());
+        final Set<Synset> res = this.synsetMap.values().stream()
+                .filter(synset -> synset.synonyms.contains(noun)).collect(Collectors.toSet());
         if (res.isEmpty()) {
             throw new IllegalArgumentException("Found no Synsets containing " + noun);
         }
@@ -115,7 +123,8 @@ public class WordNet {
         final Set<Synset> synsetsB = findSynsetFromString(nounB);
         final Set<Integer> verticiesB = synsetsB.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
 
-        return vertexIdtoSynset(this.sap.ancestor(verticiesA, verticiesB)).synonyms.stream().collect(Collectors.joining(" "));
+        return vertexIdtoSynset(this.sap.ancestor(verticiesA, verticiesB))
+                .synonyms.stream().collect(Collectors.joining(" "));
     }
 
     private Synset vertexIdtoSynset(final int vertexId) {
@@ -125,53 +134,6 @@ public class WordNet {
 
     // do unit testing of this class
     public static void main(final String[] args) {
-        //todo clear before submission?
-        final WordNet test = new WordNet("file:///C:/Users/Kingsgambit/code/algorithms-2018/week1/week1-ogla-2018/hypernyms/wordnet/synsets.txt","file:///C:/Users/Kingsgambit/code/algorithms-2018/week1/week1-ogla-2018/hypernyms/wordnet/hypernyms.txt");
-        final String testRes = test.digraph.toString();
-        final String[] testResParsed = testRes.split(System.lineSeparator());
-        final String expectedRes = new Digraph(new In("file:///C:/Users/Kingsgambit/code/algorithms-2018/week1/week1-ogla-2018/hypernyms/wordnet/digraph-wordnet.txt")).toString();
-        final String[] expectedResParsed = expectedRes.split(System.lineSeparator());
-        for (int i = 0 ; i < expectedResParsed.length; i++) {
-            final String expectedString = expectedResParsed[i];
-            final String actualString = testResParsed[i];
-            final char[] expected = expectedString.toCharArray();
-            Arrays.sort(expected);
-            final char[] actual = actualString.toCharArray();
-            Arrays.sort(actual);
-
-            if (!Arrays.equals(expected, actual)) {
-                System.out.println("Expected " + expectedString);
-                System.out.println("Actual " + actualString);
-                break;
-            }
-        }
-        System.out.println("Testing for presence of bird produces " + test.isNoun("bird"));
-//        (distance = 23) white_marlin, mileage
-//                (distance = 33) Black_Plague, black_marlin
-//                (distance = 27) American_water_spaniel, histology
-//                (distance = 29) Brown_Swiss, barrel_roll
-        System.out.println("Number of nounces expected 119,188 and is " + ((Set<String>) test.nouns()).size());
-
-        System.out.println("Distance Test 1 " + test.distance("1530s", "decade") + " is 1");
-        System.out.println("Distance Test 2 " + test.distance("white_marlin", "white_marlin") + " is 0");
-        System.out.println("Distance Test 3 " + test.distance("white_marlin", "entity") + " is ???");
-        System.out.println("Distance Test 3 " + test.distance("mileage", "entity") + " is ???");
-        final SAP sap = new SAP(test.digraph);
-        System.out.println("SAP Length 1 " + sap.length(Arrays.asList(80917),Arrays.asList(54384, 54385, 54386)) + " is 23");
-        System.out.println("SAP Length 2 " + sap.length(2134, 24524) + " is 33");
-        System.out.println("SAP Length 3 " + sap.length(709,46146) + " is 27");
-        System.out.println("SAP Length 4 " + sap.length(2533,23170) + " is 29");
-        System.out.println("SAP Length 5 " + sap.length(Arrays.asList(81679, 81680, 81681, 81682), Arrays.asList(24306, 24307, 25293, 33764, 70067)) + " is 5");
-        //System.out.println("SAP Length 5 " + sap.length(test.helper("individual"), test.helper("edible_fruit")) + " is 7 or 10");
-
-
-        System.out.println("SAP Ancestor 1 " + sap.ancestor(Arrays.asList(80917),Arrays.asList(54384, 54385, 54386)) + " is entity");
-        System.out.println("SAP Ancestor 2 " + sap.ancestor(2134, 24524) + " is entity");
-        System.out.println("SAP Ancestor 3 " + sap.ancestor(709,46146) + " is entity");
-        System.out.println("SAP Ancestor 4 " + sap.ancestor(2533,23170) + " is entity");
-        System.out.println("SAP Ancestor 5 " + sap.ancestor(Arrays.asList(81679, 81680, 81681, 81682), Arrays.asList(24306, 24307, 25293, 33764, 70067)) + " is 20743");
-        //System.out.println("SAP Ancestor 5 " + sap.ancestor(test.helper("individual"), test.helper("edible_fruit")) + " is 60600");
-
     }
 
     private static class Synset {
