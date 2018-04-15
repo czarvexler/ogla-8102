@@ -1,29 +1,35 @@
+package hypernyms;
+
 import edu.princeton.cs.algs4.BreadthFirstDirectedPaths;
 import edu.princeton.cs.algs4.Digraph;
 
 import java.util.Collections;
 
+/**
+ * @author aleksander.veksler
+ * @since Apr-2018
+ */
 public class SAP {
 
     private final Digraph digraph;
 
     // constructor takes a digraph (not necessarily a DAG)
-    public SAP(Digraph G) {
+    public SAP(final Digraph G) {
         this.digraph = G;
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
-    public int length(int v, int w) {
+    public int length(final int v, final int w) {
         return length(Collections.singleton(v), Collections.singleton(w));
     }
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if no such path
-    public int ancestor(int v, int w) {
+    public int ancestor(final int v, final int w) {
         return ancestor(Collections.singleton(v), Collections.singleton(w));
     }
 
     // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
-    public int length(Iterable<Integer> v, Iterable<Integer> w) {
+    public int length(final Iterable<Integer> v, final Iterable<Integer> w) {
         final BreadthFirstDirectedPaths breadthFirstDirectedPathsV = new BreadthFirstDirectedPaths(this.digraph, v);
         final BreadthFirstDirectedPaths breadthFirstDirectedPathsW = new BreadthFirstDirectedPaths(this.digraph, w);
 
@@ -41,7 +47,7 @@ public class SAP {
     }
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
-    public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
+    public int ancestor(final Iterable<Integer> v, final Iterable<Integer> w) {
         final BreadthFirstDirectedPaths breadthFirstDirectedPathsV = new BreadthFirstDirectedPaths(this.digraph, v);
         final BreadthFirstDirectedPaths breadthFirstDirectedPathsW = new BreadthFirstDirectedPaths(this.digraph, w);
 
@@ -61,7 +67,7 @@ public class SAP {
     }
 
     // do unit testing of this class
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
 
     }
 }

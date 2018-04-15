@@ -1,16 +1,22 @@
+package hypernyms;
+
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.Arrays;
 
+/**
+ * @author aleksander.veksler
+ * @since Apr-2018
+ */
 public class Outcast {
 
     private final WordNet wordnet;
 
-    public Outcast(WordNet wordnet)  {
+    public Outcast(final WordNet wordnet)  {
         this.wordnet = wordnet;
     }
-    public String outcast(String[] nouns) {
+    public String outcast(final String[] nouns) {
         int maxDistance = -1;
         String nounForMaxDistance = "";
         for (final String noun : nouns) {
@@ -22,7 +28,7 @@ public class Outcast {
         }
         return nounForMaxDistance;
     }
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         WordNet wordnet = new WordNet(args[0], args[1]);
         Outcast outcast = new Outcast(wordnet);
         for (int t = 2; t < args.length; t++) {
