@@ -1,5 +1,8 @@
 import edu.princeton.cs.algs4.Digraph;
+import edu.princeton.cs.algs4.DirectedCycle;
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.Topological;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -7,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
+// import java.util.stream.Collectors;
 
 /**
  * @author aleksander.veksler
@@ -17,6 +20,7 @@ public class WordNet {
 
     private final Map<Integer, Synset> synsetMap;
     private final Digraph digraph;
+    private Set<String> nouns;
     private final SAP sap;
 
     // constructor takes the name of the two input files
@@ -24,25 +28,44 @@ public class WordNet {
         if (synsets == null || hypernyms == null) {
             throw new IllegalArgumentException();
         }
-        try {
-            final In synsetsIn = new In(synsets);
-            final String[] synsetLines = synsetsIn.readAllLines();
-            this.digraph = new Digraph(synsetLines.length);
-            this.synsetMap = new HashMap<>(synsetLines.length);
+        final In synsetsIn = new In(synsets);
+        final String[] synsetLines = synsetsIn.readAllLines();
+        this.digraph = new Digraph(synsetLines.length);
+        this.synsetMap = new HashMap<>(synsetLines.length);
 
-            parseSynsets(synsetLines);
-            parseHypernymsFile(hypernyms);
-            this.sap = new SAP(this.digraph);
-        } catch (final Exception e) {
-            throw new IllegalArgumentException(e);
+        parseSynsets(synsetLines);
+        parseHypernymsFile(hypernyms);
+        if (new DirectedCycle(this.digraph).hasCycle()) {
+            throw new IllegalArgumentException("Found Cycle in Digraph");
         }
+
+        if (!(new Topological(this.digraph).hasOrder())) {
+            throw new IllegalArgumentException("Graph is not a DAG");
+        }
+
+        if (!verifySingleRoot()) {
+            throw new IllegalArgumentException("Expected exactly one root");
+        }
+
+        this.sap = new SAP(this.digraph);
+    }
+
+    private boolean verifySingleRoot() {
+
+        int roots = 0;
+        for (int i = 0; i < this.digraph.V(); i++) {
+            if (this.digraph.outdegree(i) == 0) {
+                roots++;
+            }
+        }
+        return roots == 1;
     }
 
     private void parseSynsets(final String[] synsetLines) {
         int vertexIdAllocator = 0;
         for (final String synsetLine : synsetLines) {
             final String[] parsedLine = synsetLine.split(",");
-            final Integer id = Integer.parseInt(parsedLine[0]);
+            final int id = Integer.parseInt(parsedLine[0]);
             final List<String> synonyms = Arrays.asList(parsedLine[1].split(" "));
             final Synset synset = new Synset(vertexIdAllocator, synonyms);
             this.synsetMap.put(id, synset);
@@ -85,17 +108,20 @@ public class WordNet {
         return getNouns().contains(word);
     }
 
-    private Collection<String> getNouns() {
-        return this.synsetMap.values().stream().flatMap(synset -> synset.synonyms.stream()).collect(Collectors.toSet());
+    private Set<String> getNouns() {
+        if (this.nouns == null) {
+            this.nouns = this.synsetMap.values().stream().flatMap(synset -> synset.synonyms.stream()).collect(java.util.stream.Collectors.toSet());
+        }
+        return this.nouns;
     }
 
     // distance between nounA and nounB (defined below)
     public int distance(final String nounA, final String nounB) {
         final Set<Synset> synsetsA = findSynsetFromString(nounA);
-        final Set<Integer> verticiesA = synsetsA.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
+        final Set<Integer> verticiesA = synsetsA.stream().map(synset -> synset.vertexId).collect(java.util.stream.Collectors.toSet());
 
         final Set<Synset> synsetsB = findSynsetFromString(nounB);
-        final Set<Integer> verticiesB = synsetsB.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
+        final Set<Integer> verticiesB = synsetsB.stream().map(synset -> synset.vertexId).collect(java.util.stream.Collectors.toSet());
 
         return this.sap.length(verticiesA, verticiesB);
     }
@@ -105,7 +131,7 @@ public class WordNet {
             throw new IllegalArgumentException("Null word not allowed");
         }
         final Set<Synset> res = this.synsetMap.values().stream()
-                .filter(synset -> synset.synonyms.contains(noun)).collect(Collectors.toSet());
+                .filter(synset -> synset.synonyms.contains(noun)).collect(java.util.stream.Collectors.toSet());
         if (res.isEmpty()) {
             throw new IllegalArgumentException("Found no Synsets containing " + noun);
         }
@@ -116,13 +142,13 @@ public class WordNet {
     // in a shortest ancestral path (defined below)
     public String sap(final String nounA, final String nounB) {
         final Set<Synset> synsetsA = findSynsetFromString(nounA);
-        final Set<Integer> verticiesA = synsetsA.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
+        final Set<Integer> verticiesA = synsetsA.stream().map(synset -> synset.vertexId).collect(java.util.stream.Collectors.toSet());
 
         final Set<Synset> synsetsB = findSynsetFromString(nounB);
-        final Set<Integer> verticiesB = synsetsB.stream().map(synset -> synset.vertexId).collect(Collectors.toSet());
+        final Set<Integer> verticiesB = synsetsB.stream().map(synset -> synset.vertexId).collect(java.util.stream.Collectors.toSet());
 
         return vertexIdtoSynset(this.sap.ancestor(verticiesA, verticiesB))
-                .synonyms.stream().collect(Collectors.joining(" "));
+                .synonyms.stream().collect(java.util.stream.Collectors.joining(" "));
     }
 
     private Synset vertexIdtoSynset(final int vertexId) {
@@ -132,6 +158,8 @@ public class WordNet {
 
     // do unit testing of this class
     public static void main(final String[] args) {
+        // Removed for Submission
+        StdOut.println((new WordNet("synsets.txt", "hypernyms.txt").isNoun("bird")));
     }
 
     private static class Synset {
